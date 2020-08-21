@@ -14,4 +14,6 @@ paramiko (pip install paramiko)\
 jnpr.junos (pin install junos-eznc)\
 scp (pip install scp)\
 \
-Tested with Python 3.7.2
+Tested with Python 3.7.2\
+\
+Feel free to add your stuff and send a pull request. I'm new to python so forgive me my "naive programming" ;)
