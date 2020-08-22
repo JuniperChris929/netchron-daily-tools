@@ -7,6 +7,7 @@ import getpass
 import logging
 import paramiko
 import jnpr.junos
+from pathlib import Path
 from scp import SCPClient
 from jnpr.junos import Device
 from datetime import datetime
@@ -42,7 +43,6 @@ bgpSummary:
   """
 
 
-# noinspection PyGlobalUndefined
 def login_details():
     global varIP
     global varUser
@@ -54,7 +54,7 @@ def login_details():
 
     if str(varUser) == 'root':
         sys.exit(
-            'What part of NOT ROOT did you not understand boomer? ;) Nice try - better luck next time!')
+            '                             .----------.\n                            /  .-.  .-.  \\\n                           /   | |  | |   \\\n                           \\   `-\'  `-\'  _/\n                           /\\     .--.  / |\n                           \\ |   /  /  / /\n                           / |  `--\'  /\\ \\\n                            /`-------\'  \\ \\      \n            By choosing the name root you have doomed us all!\nBuy fear not - I have ended this script so the apocalypse is not today ;)\n')
 
 
 def bgp_adv():
@@ -442,7 +442,6 @@ def spanning_block():
 
 
 def njsupport():
-    version_arg = "2020.08.16.22"
     now = datetime.now()
     dir_config = 'configuration'
     dir_rsi = 'rsi'
@@ -456,12 +455,20 @@ def njsupport():
     logging.basicConfig(filename=log, level=logging.DEBUG, format='%(asctime)s %(message)s',
                         datefmt='%d/%m/%Y %H:%M:%S')
 
-    if str(varUser) == 'root':
-        sys.exit(
-            'Unfortunately the user root is currently not supported - Please run the tool again and choose another user.')
-
     buff = ''
     resp = ''
+
+    while True:
+        try:
+            varPath = str(input("Do you want the support package [R]emote (on the box) or [L]ocal (download to this PC)?: "))
+        except ValueError:
+            print("Please choose either R for Remote or L for Local")
+        else:
+            if varPath=="R" or varPath=="L":
+                break
+            else:
+                print("Please choose either R for Remote or L for Local")
+
     print("\n")
     print("\n")
     print("\n")
@@ -553,86 +560,100 @@ def njsupport():
     else:
         logging.info('Error: Logfiles not compresses successfully. Check Device manually.')
 
-    # Now downloading all the files created on the device via scp
-    print("\n")
-    print("Step 4/5: Fetching the files created earlier")
-    logging.info('Step 4/5: Fetching the files created earlier')
+    if varPath == "L":
+        # Now downloading all the files created on the device via scp
+        print("\n")
+        print("Step 4/5: Fetching the files created earlier")
+        logging.info('Step 4/5: Fetching the files created earlier')
+      
+        logging.info('Info: Fetching RSI...')
+        try:
+            with SCPClient(ssh.get_transport(), sanitize=lambda x: x) as scp:
+                scp.get(remote_path='/var/tmp/rsi-' + date_arg + '.txt',
+                        local_path='./' + dir_root + '-' + varIP + '-' + date_arg + '/' + dir_rsi + '/')
+        except:
+            logging.info('Error: Could not fetch RSI - something went wrong...')
+            scp.close()
+        finally:
+            logging.info('Info: RSI successfully fetched.')
+            scp.close()
+      
+        logging.info('Info: Fetching Logfiles...')
+        try:
+            with SCPClient(ssh.get_transport(), sanitize=lambda x: x) as scp:
+                scp.get(remote_path='/var/tmp/logfiles-' + date_arg + '.tgz',
+                        local_path='./' + dir_root + '-' + varIP + '-' + date_arg + '/' + dir_logfiles + '/')
+        except:
+            logging.info('Error: Could not fetch Logfiles - something went wrong...')
+            scp.close()
+        finally:
+            logging.info('Info: Logfiles successfully fetched.')
+            scp.close()
+      
+        logging.info('Info: Fetching Configuration...')
+        try:
+            with SCPClient(ssh.get_transport(), sanitize=lambda x: x) as scp:
+                scp.get(remote_path='/var/tmp/active-config-' + date_arg + '.txt',
+                        local_path='./' + dir_root + '-' + varIP + '-' + date_arg + '/' + dir_config + '/')
+        except:
+            logging.info('Error: Could not fetch active Configuration - something went wrong...')
+            scp.close()
+        finally:
+            logging.info('Info: Configuration successfully fetched.')
+            scp.close()
+      
+        logging.info('Info: Now fetching the crash-dumps (core-dumps) if they exist...')
+        try:
+            with SCPClient(ssh.get_transport(), sanitize=lambda x: x) as scp:
+                scp.get(remote_path='/var/crash/*',
+                        local_path='./' + dir_root + '-' + varIP + '-' + date_arg + '/' + dir_core + '/')
+        except:
+            logging.info('Info: No crash-dumps (core-dumps) found - this is a good sign.')
+            scp.close()
+        finally:
+            logging.info('Warning: crash-dumps (core-dumps) found and transferred...')
+            scp.close()
 
-    logging.info('Info: Fetching RSI...')
-    try:
-        with SCPClient(ssh.get_transport(), sanitize=lambda x: x) as scp:
-            scp.get(remote_path='/var/tmp/rsi-' + date_arg + '.txt',
-                    local_path='./' + dir_root + '-' + varIP + '-' + date_arg + '/' + dir_rsi + '/')
-    except:
-        logging.info('Error: Could not fetch RSI - something went wrong...')
-        scp.close()
-    finally:
-        logging.info('Info: RSI successfully fetched.')
-        scp.close()
-
-    logging.info('Info: Fetching Logfiles...')
-    try:
-        with SCPClient(ssh.get_transport(), sanitize=lambda x: x) as scp:
-            scp.get(remote_path='/var/tmp/logfiles-' + date_arg + '.tgz',
-                    local_path='./' + dir_root + '-' + varIP + '-' + date_arg + '/' + dir_logfiles + '/')
-    except:
-        logging.info('Error: Could not fetch Logfiles - something went wrong...')
-        scp.close()
-    finally:
-        logging.info('Info: Logfiles successfully fetched.')
-        scp.close()
-
-    logging.info('Info: Fetching Configuration...')
-    try:
-        with SCPClient(ssh.get_transport(), sanitize=lambda x: x) as scp:
-            scp.get(remote_path='/var/tmp/active-config-' + date_arg + '.txt',
-                    local_path='./' + dir_root + '-' + varIP + '-' + date_arg + '/' + dir_config + '/')
-    except:
-        logging.info('Error: Could not fetch active Configuration - something went wrong...')
-        scp.close()
-    finally:
-        logging.info('Info: Configuration successfully fetched.')
-        scp.close()
-
-    logging.info('Info: Now fetching the crash-dumps (core-dumps) if they exist...')
-    try:
-        with SCPClient(ssh.get_transport(), sanitize=lambda x: x) as scp:
-            scp.get(remote_path='/var/crash/*',
-                    local_path='./' + dir_root + '-' + varIP + '-' + date_arg + '/' + dir_core + '/')
-    except:
-        logging.info('Info: No crash-dumps (core-dumps) found - this is a good sign.')
-        scp.close()
-    finally:
-        logging.info('Warning: crash-dumps (core-dumps) found and transferred...')
-        scp.close()
-
-    # Deleting our files on the switch so we don't exhaust all the space on it
-    print("\n")
-    print("Step 5/5: Deleting files from remote device to gain space back and finishing script")
-    logging.info('Step 5/5: Deleting files from remote device to gain space back and finishing script')
-    logging.info('Info: Deleting /var/tmp/rsi-' + date_arg + '.txt')
-    channel.send('file delete /var/tmp/rsi-' + date_arg + '.txt\n')
-    logging.info('Info: File deleted successfully.')
-    time.sleep(2)
-    logging.info('Info: Deleting /var/tmp/logfiles-' + date_arg + '.tgz')
-    channel.send('file delete /var/tmp/logfiles-' + date_arg + '.tgz\n')
-    logging.info('Info: File deleted successfully.')
-    time.sleep(2)
-    logging.info('Info: Deleting /var/tmp/active-config-' + date_arg + '.txt')
-    channel.send('file delete /var/tmp/active-config-' + date_arg + '.txt\n')
-    logging.info('Info: File deleted successfully.')
-    resp = channel.recv(9999)
-    output = resp.decode().split(',')
-    # print(''.join(output)) #commented out so its not shown on the console (debug)
-    time.sleep(1)
-    ssh.close()
-    time.sleep(1)
-
-    shutil.make_archive('njs-package_' + varIP + '_' + date_arg, 'zip', dir_root + '-' + varIP + '-' + date_arg)
-    shutil.rmtree(dir_root + '-' + varIP + '-' + date_arg, ignore_errors=True)
-    # os.remove("njs.log")
-    print("\n")
-    print("Finished!")
+        print("\n")
+        print("Step 5/5: Deleting files from remote device to gain space back and finishing script")
+        logging.info('Step 5/5: Deleting files from remote device to gain space back and finishing script')
+        logging.info('Info: Deleting /var/tmp/rsi-' + date_arg + '.txt')
+        channel.send('file delete /var/tmp/rsi-' + date_arg + '.txt\n')
+        logging.info('Info: File deleted successfully.')
+        time.sleep(2)
+        logging.info('Info: Deleting /var/tmp/logfiles-' + date_arg + '.tgz')
+        channel.send('file delete /var/tmp/logfiles-' + date_arg + '.tgz\n')
+        logging.info('Info: File deleted successfully.')
+        time.sleep(2)
+        logging.info('Info: Deleting /var/tmp/active-config-' + date_arg + '.txt')
+        channel.send('file delete /var/tmp/active-config-' + date_arg + '.txt\n')
+        logging.info('Info: File deleted successfully.')
+        resp = channel.recv(9999)
+        output = resp.decode().split(',')
+        # print(''.join(output)) #commented out so its not shown on the console (debug)
+        time.sleep(1)
+        ssh.close()
+        time.sleep(1)
+     
+        shutil.make_archive('njs-package_' + varIP + '_' + date_arg, 'zip', dir_root + '-' + varIP + '-' + date_arg)
+        shutil.rmtree(dir_root + '-' + varIP + '-' + date_arg, ignore_errors=True)
+        print("\n")
+        print("Finished!")
+        pathdisplay = Path(__file__).parent.absolute()
+        print("The file has been downloaded to: " + str(pathdisplay))
+      
+    elif varPath == "R":
+        print("\n")
+        print("Step 4/5 and 5/5: Skipping this steps because you selected that the file should remain on the box.")
+        logging.info('Step 4/5 and 5/5: Skipping this steps because you selected that the file should remain on the box.')
+        print("The package can be found at /var/tmp/")
+        logging.info('The package can be found at /var/tmp/')
+        print("\n")
+        print("Finished!")
+    else:
+        print("\n")
+        print("Error: Something went horribly wrong for reasons we do not know yet. Exiting...")
+        logging.info('Error: Something went horribly wrong for reasons we do not know yet. Exiting...')
 
 
 def main():
@@ -653,7 +674,7 @@ def main():
         print("Current User: " + varUser)
         print(" ")
         print("[1] - Change Login Details / Switch Device")
-        print("[2] - Collect Logs and RSI for Analysis")
+        print("[2] - Collect Logs and RSI (Support-Information for JTAC) for Analysis")
         print("[3] - Routing Engine Menu")
         print("[4] - Spanning-Tree Menu")
         print("[5] - Routing Menu")
