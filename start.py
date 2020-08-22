@@ -51,7 +51,7 @@ def login_details():
     varIP = input("Please enter the Hostname or IP of your target Device: ")
     varUser = input("Please Enter a Username (NOT ROOT): ")
     varPassword = getpass.getpass()
-
+    
     if str(varUser) == 'root':
         sys.exit(
             '                             .----------.\n                            /  .-.  .-.  \\\n                           /   | |  | |   \\\n                           \\   `-\'  `-\'  _/\n                           /\\     .--.  / |\n                           \\ |   /  /  / /\n                           / |  `--\'  /\\ \\\n                            /`-------\'  \\ \\      \n            By choosing the name root you have doomed us all!\nBuy fear not - I have ended this script so the apocalypse is not today ;)\n')
@@ -657,12 +657,15 @@ def njsupport():
 
 
 def main():
+
+    global varVersion
+    varVersion = "2020.08.22.01"
     loop_condition_main = True
     loop_condition_routing = True
     print(
         "  _  _     _      _                   ___       _ _        _____         _    \n | \\| |___| |_ __| |_  _ _ ___ _ _   |   \\ __ _(_) |_  _  |_   _|__  ___| |___\n | .` / -_)  _/ _| \' \\| \'_/ _ \\ \' \\  | |) / _` | | | || |   | |/ _ \\/ _ \\ (_-<\n |_|\\_\\___|\\__\\__|_||_|_| \\___/_||_| |___/\\__,_|_|_|\\_, |   |_|\\___/\\___/_/__/\n                                                    |__/                      ")
     print(
-        "                                 ____\n                                / . .\\\n                                \\  ---<\n                                 \\  /\n                       __________/ /\n                    -=:___________/ developed by @chsjuniper\n")
+        "                                 ____\n                                / . .\\\n                                \\  ---<\n                                 \\  /\n                       __________/ /\n                    -=:___________/ Script-Version: " + varVersion + " \n")
 
     login_details()
 
@@ -691,7 +694,8 @@ def main():
         print("\n")
 
         if main_input == 9:
-            print("This tool was coded for you by Christian Scholz (@chsjuniper)")
+            print("This tool was coded for you by Christian Scholz (@chsjuniper).") 
+            print("This tool is able to run in IPv6 only environments!")
             loop_condition_main = False
             break
 
