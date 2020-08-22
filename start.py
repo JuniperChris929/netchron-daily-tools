@@ -441,6 +441,29 @@ def spanning_block():
         print("\n")
 
 
+def get_processes():
+    port_arg = 22
+
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(varIP, username=varUser, password=varPassword, port=port_arg)
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        channel = ssh.invoke_shell()
+        stdin, stdout, stderr = ssh.exec_command(
+            'start shell command "top | egrep \\"root|PID|last pid\\" | egrep -v \\" 0.00%\\"" \n')
+        exit_status = stdout.channel.recv_exit_status()
+        stdout = stdout.readlines()
+        print('\n'.join(stdout))
+        ssh.close()
+        print("\n")
+        print("\n")
+    except paramiko.AuthenticationException as error:
+        print("Error: The Credentials did not work or ssh / netconf is not enabled!")
+        print("\n")
+        print("\n")
+
+
 def njsupport():
     now = datetime.now()
     dir_config = 'configuration'
@@ -659,7 +682,7 @@ def njsupport():
 def main():
 
     global varVersion
-    varVersion = "2020.08.22.01"
+    varVersion = "2020.08.22.02"
     loop_condition_main = True
     loop_condition_routing = True
     print(
@@ -677,8 +700,8 @@ def main():
         print("Current User: " + varUser)
         print(" ")
         print("[1] - Change Login Details / Switch Device")
-        print("[2] - Collect Logs and RSI (Support-Information for JTAC) for Analysis")
-        print("[3] - Routing Engine Menu")
+        print("[2] - Collect Logs and RSI (Support-Information)")
+        print("[3] - Routing-Engine Menu")
         print("[4] - Spanning-Tree Menu")
         print("[5] - Routing Menu")
         print("[6] - Command Menu")
@@ -714,15 +737,16 @@ def main():
                     print("Current Device: " + varIP)
                     print("Current User: " + varUser)
                     print(" ")
-                    print("[1] - Check CPU Usage")
-                    print("[2] - Get Device Infos")
-                    print("[3] - Back")
+                    print("[1] - Check CPU usage")
+                    print("[2] - Get device infos")
+                    print("[3] - Get top process informations")
+                    print("[4] - Back")
                     print(" ")
                     main_input = int(input("Waiting for user input>> "))
                     print("#######################################")
                     print("\n")
 
-                    if main_input == 3:
+                    if main_input == 4:
                         loop_condition_engine = False
                         break
 
@@ -731,6 +755,8 @@ def main():
                             chassis_re()
                         elif main_input == 2:
                             get_device()
+                        elif main_input == 3:
+                            get_processes()
 
             elif main_input == 4:
                 while loop_condition_spanning:
@@ -740,9 +766,9 @@ def main():
                     print("Current Device: " + varIP)
                     print("Current User: " + varUser)
                     print(" ")
-                    print("[1] - Check Interface Description")
-                    print("[2] - Check Blocked Interfaces")
-                    print("[3] - Unblock Interfaces")
+                    print("[1] - Check interface descriptions")
+                    print("[2] - Check blocked interfaces")
+                    print("[3] - Unblock interfaces")
                     print("[4] - Back")
                     print(" ")
                     main_input = int(input("Waiting for user input>> "))
@@ -769,8 +795,8 @@ def main():
                     print("Current Device: " + varIP)
                     print("Current User: " + varUser)
                     print(" ")
-                    print("[1] - Check BGP Routes")
-                    print("[2] - Check OSPF Neighbors")
+                    print("[1] - Check BGP-Routes")
+                    print("[2] - Check OSPF-Neighbors")
                     print("[3] - BGP Advertisement checker")
                     print("[4] - Back")
                     print(" ")
@@ -798,9 +824,9 @@ def main():
                     print("Current Device: " + varIP)
                     print("Current User: " + varUser)
                     print(" ")
-                    print("[1] - Enable Netconf")
-                    print("[2] - Disable Netconf")
-                    print("[3] - Rollout vlan")
+                    print("[1] - Enable netconf")
+                    print("[2] - Disable netconf")
+                    print("[3] - Create VLAN")
                     print("[4] - Back")
                     print(" ")
                     main_input = int(input("Waiting for user input>> "))
