@@ -679,10 +679,28 @@ def njsupport():
         logging.info('Error: Something went horribly wrong for reasons we do not know yet. Exiting...')
 
 
+def mass_command():
+    
+    varMassFile = input("Please enter the Path and Filename of your IP List (txt-file with one IP per line): ")
+
+    with open(varMassFile, 'r') as f:
+        devices = [line.strip() for line in f]
+
+    for switch in devices:
+        port_arg = 22
+
+        dev = Device(host=switch, user=varUser, password=varPassword, gather_facts=True)
+        dev.open()
+        dev.timeout = 60
+        facts = dev.facts
+        print(switch + " is currently running: " + dev.facts['version'])
+    print("\n")
+
+
 def main():
 
     global varVersion
-    varVersion = "2020.08.22.02"
+    varVersion = "2020.08.24.01"
     loop_condition_main = True
     loop_condition_routing = True
     print(
@@ -706,6 +724,7 @@ def main():
         print("[5] - Routing Menu")
         print("[6] - Command Menu")
         print("[7] - Get Chassis Serialnumber")
+        print("[8] - Version Mass-Fetch")        
         print("[9] - Exit the Tool")
         print(" ")
         loop_condition_routing = True
@@ -847,6 +866,9 @@ def main():
 
             elif main_input == 7:
                 dev_script()
+
+            elif main_input == 8:
+                mass_command()
 
 
 if __name__ == "__main__":
