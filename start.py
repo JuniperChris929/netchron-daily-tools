@@ -697,10 +697,56 @@ def mass_command():
     print("\n")
 
 
+def burstsize():
+    mbpslimit = input("What's the Speed that you want to limit the Port to in Mbps?")
+    bpslimit = int(mbpslimit)*int(1000000)
+    onems = int(bpslimit)/int(1000)
+    fivems = int(onems)*int(5)
+    burstsize = int(fivems)/int(8)
+    print("")
+    print("To limit your Port to" ,mbpslimit + "Mbps you probably need to use a burst size of" ,int(burstsize))
+    print("This results in the following Config:")
+    print("")
+    print("set firewall family inet filter",mbpslimit + "M-Ratelimit term default then policer" ,mbpslimit + "M-Policer")
+    print("set firewall policer",mbpslimit + "M-Policer if-exceeding bandwidth-limit",mbpslimit + "m")
+    print("set firewall policer",mbpslimit + "M-Policer if-exceeding burst-size-limit",int(burstsize))
+    print("set firewall policer",mbpslimit + "M-Policer then discard")
+    print("")
+
+
+def find_config():
+    port_arg = 22
+
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(varIP, username=varUser, password=varPassword, port=port_arg)
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        channel = ssh.invoke_shell()
+        stdin, stdout, stderr = ssh.exec_command(
+            'show configuration | display set | no-more')
+        exit_status = stdout.channel.recv_exit_status()
+        stdout = stdout.readlines()
+        remote_char_01 = str(stdout).replace('\\n','').replace('\'','').replace(']','').replace('[','')
+        # mylist = []
+        # mylist.append(remote_char_01)
+        # print(mylist)
+        # print(len(mylist))
+        # print(str(stdout))
+        print(f'List of Items in CSV ={str(stdout).split(",")}')
+        ssh.close()
+        print("\n")
+        print("\n")
+    except paramiko.AuthenticationException as error:
+        print("Error: The Credentials did not work or ssh / netconf is not enabled!")
+        print("\n")
+        print("\n")
+
+
 def main():
 
     global varVersion
-    varVersion = "2020.08.24.01"
+    varVersion = "2020.09.09.04"
     loop_condition_main = True
     loop_condition_routing = True
     print(
@@ -722,8 +768,7 @@ def main():
         print("[3] - Routing-Engine Menu")
         print("[4] - Spanning-Tree Menu")
         print("[5] - Routing Menu")
-        print("[6] - Command Menu")
-        print("[7] - Get Chassis Serialnumber")
+        print("[6] - Script Menu")
         print("[8] - Version Mass-Fetch")        
         print("[9] - Exit the Tool")
         print(" ")
@@ -838,7 +883,7 @@ def main():
             elif main_input == 6:
                 while loop_condition_command:
                     print("#######################################")
-                    print("#           Command Menu              #")
+                    print("#            Script Menu              #")
                     print("#######################################")
                     print("Current Device: " + varIP)
                     print("Current User: " + varUser)
@@ -846,13 +891,15 @@ def main():
                     print("[1] - Enable netconf")
                     print("[2] - Disable netconf")
                     print("[3] - Create VLAN")
-                    print("[4] - Back")
+                    print("[4] - Find String in config")
+                    print("[5] - Burstsize calculator (Port-Shaping)")
+                    print("[6] - Back")
                     print(" ")
                     main_input = int(input("Waiting for user input>> "))
                     print("#######################################")
                     print("\n")
 
-                    if main_input == 4:
+                    if main_input == 6:
                         loop_condition_command = False
                         break
 
@@ -863,9 +910,15 @@ def main():
                             disable_netconf()
                         elif main_input == 3:
                             set_vlan()
+                        elif main_input == 4:
+                            find_config()
+                        elif main_input == 5:
+                            burstsize()
+
 
             elif main_input == 7:
-                dev_script()
+                print(" Do you always press numbers you are not supposed to? ;) ")
+
 
             elif main_input == 8:
                 mass_command()
